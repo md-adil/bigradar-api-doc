@@ -301,7 +301,8 @@ when open the conversation means all messages in the conversation has been read
     socket.on('new conversation', payload => {
         // add new conversation in the list
     });
-    payload
+    
+#### payload
     {
         _id: '5afd9c3ffc69e310b79a9dba' // Conversation id
         message : {
@@ -408,7 +409,7 @@ when open the conversation means all messages in the conversation has been read
     {
         user_id: '5afe5d66fc69e310b79aa7f3' // User id
     }
-    
+
 ### When user get online
 	socket.on('server/users/join', payload => {
 
