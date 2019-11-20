@@ -73,7 +73,7 @@ Entire authenticated request expect token in header
     interface IUserResponse {
         _id: string;
         name?: string;
-        status: number;
+        status: number; // sometime it can return string in old data, if cause the error, i wil make make it done.
         location?: ILocation;
     }
 
