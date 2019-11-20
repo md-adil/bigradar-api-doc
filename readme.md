@@ -14,9 +14,10 @@
 | email      | string | User email id to login |
 | password   | string | user password          |
 
-#### response on success
-    {
-        "token:" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1YWZmYjNkMGZjNjllMzEwYjc5YWI1MGYiLCJpYXQiOjE1MjY3MDcxNTI0NTF9.pC7qdIrOCZid2xYJ7wlw3psFjibMo1mehhk3tFogvdQ" // token which is used to make further request.
+#### Response on success
+    interface ILoginResponse {
+        token: string;
+        action?: "verify-email" | "add-organization";
     }
     // status code 200
 
@@ -58,37 +59,41 @@ Entire authenticated request expect token in header
 
 ### Conversation List
     /conversations - GET
-###
-    {
-        "data": [
-            {
-                "_id": "5afdc180fc69e310b79aa17c",
-                "updatedAt": "2018-05-18T10:47:05.694Z",
-                "status": "open",
-                "admin_id": "591bea3019dac5ffdba75007",
-                "message": {
-                    "text": "Ved.vikash2016@gmail.com",
-                    "createdAt": "2018-05-18T10:48:13.957Z"
-                },
-                "user": {
-                    "_id": "5afdc17ffc69e310b79aa17b",
-                    "status": "offline",
-                    "name": "Miguel Connelly",
-                    "location": {
-                        "city": "Singapore",
-                        "country": "Singapore",
-                        "isp": "DigitalOcean",
-                        "lat": 1.2931,
-                        "lon": 103.8558,
-                        "region": "Central Singapore Community Development Council",
-                        "pincode": ""
-                    }
-                },
-                "totalMessage": 4,
-                "unreadMessage": 0
-            },
-            ...
-        ]
+##
+    interface ILocation {
+        city: string;
+        country: string;
+        isp: string;
+        lat: string;
+        lon: string;
+        region: string;
+        pincode: string;
+    }
+
+    interface IUserResponse {
+        _id: string;
+        name?: string;
+        status: number;
+        location?: ILocation;
+    }
+
+    interface IMessageResponse {
+        text: string;
+        createdAt: Date;
+    }
+
+    interface IConversationResponse {
+        _id: string;
+        status: ConversationStatus;
+        updatedAt: Date;
+        user: IUserResponse;
+        message: IMessageResponse;
+        totalMessage?: number;
+        unreadMessage?: number;
+    }
+
+    Response {
+        data: IConversationResponse[]
     }
 
 ### Get perticular conversation
@@ -141,22 +146,30 @@ Entire authenticated request expect token in header
 ### Get Messages by Conversation
     /conversations/:id/messages - GET
 ###
-    {
-        "data": [
-            {
-                "user": {
-                    "name": "Arushi"
-                },
-                "_id": "5afe8ba8fc69e310b79aacec",
-                "isAuthor": true,
-                "text": "Need an expert's advice! We are here to assist you.",
-                "type": "campaign",
-                "read": true,
-                "createdAt": "2018-05-18T08:15:36.755Z"
-            },
-            ...
-        ]
+    type MessageStatus = "sent" | "read" | "respond" | "closed" | "email:sent" | "email:delivered" | "email:bounce" | "email:open";
+    type MessageType = "text" | "form" | "info" | "option" | "campaign";
+    interface IMessageResponse {
+        _id: string;
+        text: string;
+        isAuthor: boolean;
+        conversation_id: string;
+        status: MessageStatus;
+        readAt?: Date;
+        type: MessageType;
+        user: {
+            _id: string;
+            name: string;
+        };
+        options?: IOption[];
+        createdAt: Date;
+        repliedAt?: Date;
+        entity?: MessageEntity;
     }
+    
+    Response {
+        data: IMessageResponse[]
+    }
+
 ### Close Conversation
     /conversations/:id/close - POST
 ###
@@ -263,11 +276,11 @@ Entire authenticated request expect token in header
 ## Websocket
 
 ### Send Message
-    socket.emit('server/message/send', {
+    socket.emit('client/message/send', {
         text: 'Some text'
         conversation_id: '5afd7d0ffc69e310b79a9a15',
         type: 'text'
-    }, message => {
+    }, (message: IMessageResponse) => {
         // callback
         // when message delivered, this callback willbe called
     })
@@ -303,52 +316,13 @@ when open the conversation means all messages in the conversation has been read
     });
     
 #### payload
-    {
-        _id: '5afd9c3ffc69e310b79a9dba' // Conversation id
-        message : {
-            text: "Hey There",
-            createdAt: "2018-05-17T15:16:24.835Z" // Message time
-        }
-        user : {
-            _id: "5afd9bc4.3fc69e310b79a9dad", // User id
-            name: "Tressa Hills", // User name
-            status: "offline" // User status either offline or online,
-            location: { // location is optional
-                city: "Thiruvananthapuram",
-                country: "India",
-                isp: "Jio",
-                lat: 8.5069,
-                lon: 76.9569,
-                region: "Kerala"
-            }
-        }
-        status : "open" // message status either open, close or trashed
-        totalMessage : 4
-        unreadMessage : 0
-        updatedAt : "2018-05-17T15:14:27.398Z"
-        city : "Thiruvananthapuram",
-        country : "India"
-    }
+    IConversationResponse
 
 
 ### When new message
-    socket.on('server/message/send', payload => {
+    socket.on('server/message/send', (payload: IMessageResponse) => {
         // add message to conversation
     })
-    payload
-    {
-        _id: '5afd9c3ffc69e310b79a9dbb', // Message id
-        user: {
-            name: 'Adil'
-        },
-        isAuthor: false,
-        text: 'Hi there',
-        type: 'text',
-        email: 'md-adil@live.com',
-        read: true', // is message read
-        referer: 'https://bigradar.io',
-        createdAt: 'Thu May 17 2018 20:44:53 GMT+0530 (IST)'
-    }
 
 ### When Conversation read
     socket.on('server/conversation/read', payload => {
