@@ -1,20 +1,26 @@
 # BigRadar Api DOC
 
 ## Base URL
+
     https://app.bigradar.io/api
 
 ## Authentication
+
 ### Login
+
     /login - POST
+
 #### Header
+
     Content-type: application/json
 
 | Attributes | Type   | Description            |
-|------------|--------|------------------------|
+| ---------- | ------ | ---------------------- |
 | email      | string | User email id to login |
 | password   | string | user password          |
 
 #### Response on success
+
     interface ILoginResponse {
         token: string;
         action?: "verify-email" | "add-organization";
@@ -22,44 +28,54 @@
     // status code 200
 
 #### response on fail
+
     error message
     // status code 422
 
-
 ## Authenticated request
+
 Entire authenticated request expect token in header
+
 #### Header
+
     content-type: application/json
     authorization: <token>
 
 ### Logout
+
     /logout - POST
 
 ### Logged user information like name, avatar, etc.
+
     /me - GET
+
 ###
 
-    {
-        "user": {
-            "name": "Arushi",
-            "email": "info@edunuts.com",
-            "avatar": "https://static.bigradar.io/media/2018/05/67141fc0-58e4-11e8-a399-d382a1d7535f.jpeg"
-        },
-        "organizations": [
-            {
-                "_id": "kw1DhZo1yOCyy2A5Qc5WL3WD",
-                "name": "Edunuts",
-                "default": true,
-                "role": "admin"
-            }
-        ]
+    interface IUserOrganization {
+        _id: string;
+        name: string;
+        default: boolean;
+        role: "admin" | "agent"
+    }
+    interface IUser {
+        name: string;
+        email: string;
+        avatar?: string;
+    }
+
+    interface Response {
+        user: IUser;
+        organizations: IUserOrganization[];
     }
 
 ## Conversations
 
 ### Conversation List
+
     /conversations - GET
+
 ##
+
     interface ILocation {
         city: string;
         country: string;
@@ -97,8 +113,11 @@ Entire authenticated request expect token in header
     }
 
 ### Get perticular conversation
+
     /conversations/:id - GET
+
 ###
+
     {
         "status": "open",
         "_id": "5afdc180fc69e310b79aa17c",
@@ -143,9 +162,13 @@ Entire authenticated request expect token in header
             "lastSeen": "2018-05-18T10:55:45.337Z"
         }
     }
+
 ### Get Messages by Conversation
+
     /conversations/:id/messages - GET
+
 ###
+
     type MessageStatus = "sent" | "read" | "respond" | "closed" | "email:sent" | "email:delivered" | "email:bounce" | "email:open";
     type MessageType = "text" | "form" | "info" | "option" | "campaign";
     interface IMessageResponse {
@@ -165,63 +188,87 @@ Entire authenticated request expect token in header
         repliedAt?: Date;
         entity?: MessageEntity;
     }
-    
+
     Response {
         data: IMessageResponse[]
     }
 
 ### Close Conversation
+
     /conversations/:id/close - POST
+
 ###
+
     Conversation closed
 
 ### Delete Conversation
+
     /conversations/:id/delete - POST
+
 ###
+
     Conversation has been deleted!
 
 ### Assign Conversation
+
     /conversations/:conversation/assign/:user - PUT
+
 ###
+
     :user
 
 ### Update user by conversation id
+
     /conversations/:id/user/update
 
 ## Agents
+
 ### List of Agents
+
     /agents - GET
 
 ### Create Agent
+
     /agents
 
 ### Delete Agent
+
     /agents/:id/delete - DELETE
 
 ### Update active agent status
+
     /agents/:id/status/:status - POST
 
 ### Delete Pending Agents
+
     /agents/:id/delete-pending-agent - DELETE
 
 ## Users
+
 ### Get all users
+
     /users
 
 ### Get perticular user information
+
     /users/:id
 
 ### Conversations by user
+
     /users/:id/conversations
 
 ### Update user info
+
     /users/:user - PUT
 
 ## Settings
 
 ### Get Notifications
+
     /notifications - GET
+
 ###
+
     {
         "email": {
             "newConversation": true,
@@ -236,9 +283,13 @@ Entire authenticated request expect token in header
             "newMessage": true
         }
     };
+
 ### Update Notification
+
     /notifications - PUT
+
 #### request payload
+
     "notifications": {
         "email": {
             "newConversation": true,
@@ -253,7 +304,9 @@ Entire authenticated request expect token in header
             newMessage: true
         }
     };
+
 #### Response
+
     "email": {
         "newConversation": true,
         "newMessage": true
@@ -266,16 +319,19 @@ Entire authenticated request expect token in header
         newConversation: true,
         newMessage: true
     }
-    
-### Set FCM Token
-    /token/fcm - POST
-### Get FCM Token
-    /token/fcm - GET
 
+### Set FCM Token
+
+    /token/fcm - POST
+
+### Get FCM Token
+
+    /token/fcm - GET
 
 ## Websocket
 
 ### Send Message
+
     socket.emit('client/message/send', {
         text: 'Some text'
         conversation_id: '5afd7d0ffc69e310b79a9a15',
@@ -286,6 +342,7 @@ Entire authenticated request expect token in header
     })
 
 ### Message Read
+
 when message has been read trigger this event
 
     socket.emit('client/message/read', {
@@ -294,6 +351,7 @@ when message has been read trigger this event
     })
 
 ### Conversation Read
+
 when open the conversation means all messages in the conversation has been read
 
     socket.emit('client/conversation/read', {
@@ -301,40 +359,47 @@ when open the conversation means all messages in the conversation has been read
     });
 
 ### Start Typing
-    socket.emit('client/typing/start', { 
+
+    socket.emit('client/typing/start', {
         id: 'conversattionid'
     })
 
 ### Stop Typing
+
     socket.emit('client/typing/start', {
         id: 'conversationid'
     });
 
 ### When new conversation
+
     socket.on('new conversation', payload => {
         // add new conversation in the list
     });
-    
+
 #### payload
+
     IConversationResponse
 
-
 ### When new message
+
     socket.on('server/message/send', (payload: IMessageResponse) => {
         // add message to conversation
     })
 
 ### When Conversation read
+
     socket.on('server/conversation/read', payload => {
-		// Do update your view and db
-	});
+    	// Do update your view and db
+    });
 
 #### When Message Read
+
     socket.on('server/message/read', payload => {
-		// Do update your view and db
-	});
+    	// Do update your view and db
+    });
 
 ### When something when wrong and server disconnected
+
     socket.on('error', error => {
         // try to reconnect
     });
@@ -344,52 +409,61 @@ when open the conversation means all messages in the conversation has been read
     });
 
 ### When connection destroyed by server
+
     socket.on('socket destroyed', socket => {
         // Destroy socket
     });
 
 ### User update their email of phone
+
     socket.on('user update', payload => {
         // updated payload
     })
 
 ### When message updated
+
     socket.on('update message', payload => {
         // update message payload
     });
 
 ### When connect or disconnect
+
     socket.on('connect', socket => {
 
     });
-	socket.on('disconnect', socket => {
+    socket.on('disconnect', socket => {
 
     });
 
 ### When typing
-	socket.on('server/typing/start', payload => {
+
+    socket.on('server/typing/start', payload => {
         id: 'conversationid'
     });
-	socket.on('server/typing/stop', payload => {
+    socket.on('server/typing/stop', payload => {
         id: 'conversationid'
     });
 
 ### When user get offline
+
     socket.on('server/users/leave', payload => {
-        
+
     });
 
 #### Payload
+
     {
         user_id: '5afe5d66fc69e310b79aa7f3' // User id
     }
 
 ### When user get online
-	socket.on('server/users/join', payload => {
+
+    socket.on('server/users/join', payload => {
 
     });
 
 #### Payload
+
     {
         user_id: '5afe5d66fc69e310b79aa7f3'
     }
